@@ -2,8 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { db, APIError } from '../services/db';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { GoogleGenAI } from "@google/genai";
+import { Patient } from '../types';
 
 export const AddAssessment = () => {
     const navigate = useNavigate();
@@ -44,16 +45,31 @@ export const AddAssessment = () => {
     const [marker, setMarker] = useState<{ x: number, y: number } | null>(null);
     const imageContainerRef = useRef<HTMLDivElement>(null);
 
+    const [accessDenied, setAccessDenied] = useState(false);
+
     useEffect(() => {
         const fetchPatients = async () => {
-            const p = await db.getPatients();
+            const userJson = sessionStorage.getItem('user');
+            const user = userJson ? JSON.parse(userJson) : null;
+
+            let p: Patient[] = [];
+            if (user?.role === 'NURSE') {
+                p = await db.getPatientsByNurse(parseInt(user.id));
+                // Security check for targetPatientId from URL
+                if (targetPatientId && !p.some(pat => pat.id === targetPatientId)) {
+                    setAccessDenied(true);
+                }
+            } else {
+                p = await db.getPatients();
+            }
+
             setPatients(p);
             if (!formData.patient_id && p.length > 0) {
-                setFormData(prev => ({ ...prev, patient_id: p[0].id }));
+                setFormData(prev => ({ ...prev, patient_id: targetPatientId && p.some(pat => pat.id === targetPatientId) ? targetPatientId : p[0].id }));
             }
         };
         fetchPatients();
-    }, []);
+    }, [targetPatientId]);
 
     const analyzeImage = async (base64Data: string) => {
         setIsAnalyzing(true);
@@ -180,6 +196,21 @@ export const AddAssessment = () => {
             setLoading(false);
         }
     };
+
+    if (accessDenied) return (
+        <Layout title="Access Restricted">
+            <div className="p-20 text-center">
+                <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500 text-3xl shadow-sm border border-rose-100">
+                    <i className="fas fa-user-lock"></i>
+                </div>
+                <h2 className="text-2xl font-black text-slate-800 mb-2">Unauthorized Clinical Action</h2>
+                <p className="text-slate-500 font-medium max-w-md mx-auto">Nurses can only commit data for patients explicitly assigned to their active shift. Please contact an Admin if this is an error.</p>
+                <Link to="/dashboard" className="inline-block mt-8 px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                    Return to Hub
+                </Link>
+            </div>
+        </Layout>
+    );
 
     return (
         <Layout title="Secure Data Entry">

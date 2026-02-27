@@ -18,8 +18,19 @@ const AssessmentDetail: React.FC = () => {
             if (!id) return;
             setLoading(true);
             try {
+                const userJson = sessionStorage.getItem('user');
+                const user = userJson ? JSON.parse(userJson) : null;
+
                 const assessData = await db.getAssessmentById(id);
                 if (assessData) {
+                    if (user?.role === 'PATIENT') {
+                        const myPatient = await db.getPatientByUserId(parseInt(user.id));
+                        if (!myPatient || myPatient.id !== assessData.patient_id) {
+                            navigate('/dashboard');
+                            return;
+                        }
+                    }
+
                     setAssessment(assessData);
                     const [patientData, allVisits] = await Promise.all([
                         db.getPatientById(assessData.patient_id),

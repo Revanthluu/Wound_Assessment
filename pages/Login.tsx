@@ -173,6 +173,7 @@ const Login: React.FC = () => {
                         onChange={(e) => setRole(e.target.value as UserRole)}
                         className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                       >
+                        <option value={UserRole.ADMIN}>System Administrator</option>
                         <option value={UserRole.DOCTOR}>Doctor / Clinician</option>
                         <option value={UserRole.NURSE}>Nurse</option>
                         <option value={UserRole.PATIENT}>Patient</option>

@@ -22,11 +22,11 @@ const StaffList: React.FC = () => {
   }, []);
 
   return (
-    <Layout title="Staff Directory">
+    <Layout title="System Log">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800">Clinical Personnel</h1>
-          <p className="text-slate-500 font-medium">Internal directory of registered MediWound clinicians.</p>
+          <h1 className="text-2xl font-extrabold text-slate-800">System Activity Log</h1>
+          <p className="text-slate-500 font-medium">Internal registry and usage metrics for MediWound personnel.</p>
         </div>
       </div>
 

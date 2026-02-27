@@ -3,16 +3,36 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { db } from '../services/db';
 import { Patient } from '../types';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const PatientList: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const storedUser = sessionStorage.getItem('user');
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      setUser(parsed);
+      if (parsed.role === 'PATIENT') {
+        navigate('/dashboard');
+        return;
+      }
+    }
+
     const fetch = async () => {
-      const data = await db.getPatients();
+      let data: Patient[] = [];
+      const currentUser = storedUser ? JSON.parse(storedUser) : null;
+
+      if (currentUser?.role === 'NURSE') {
+        data = await db.getPatientsByNurse(parseInt(currentUser.id));
+      } else {
+        data = await db.getPatients();
+      }
+
       setPatients(data);
       setLoading(false);
     };
@@ -32,12 +52,14 @@ const PatientList: React.FC = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800">Patient Directory</h1>
-          <p className="text-slate-500 font-medium">Manage all clinical records and longitudinal data.</p>
+          <p className="text-slate-500 font-medium">Manage clinical records and longitudinal data.</p>
         </div>
-        <Link to="/add-patient" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
-          <i className="fas fa-user-plus"></i>
-          Register New Patient
-        </Link>
+        {(user?.role === 'DOCTOR' || user?.role === 'ADMIN') && (
+          <Link to="/add-patient" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
+            <i className="fas fa-user-plus"></i>
+            Register New Patient
+          </Link>
+        )}
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">

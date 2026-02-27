@@ -2,14 +2,22 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { db } from '../services/db';
 import { Assessment, Patient } from '../types';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export const AssessmentHistory = () => {
     const [assessments, setAssessments] = useState<Assessment[]>([]);
     const [patientsMap, setPatientsMap] = useState<Record<string, Patient>>({});
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        const storedUser = sessionStorage.getItem('user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        if (user?.role === 'PATIENT') {
+            navigate('/dashboard');
+            return;
+        }
+
         const fetchData = async () => {
             setLoading(true);
             try {

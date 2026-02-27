@@ -1,4 +1,3 @@
-
 import pool from './db.js';
 import crypto from 'crypto';
 
@@ -9,7 +8,7 @@ async function testSeed() {
 
     try {
         await pool.query(
-            "INSERT INTO patients (id, mrn, firstName, lastName, dob, gender, admissionDate, ward, room, diagnosis) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO patients (id, mrn, first_name, last_name, dob, gender, admission_date, ward, room, diagnosis) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [patientId, "TEST-MRN-" + crypto.randomBytes(2).toString('hex'), "Test", "Patient", "1990-01-01", "Male", new Date(), "Ward", "101", "Diagnosis"]
         );
         console.log("Patient inserted");

@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
-    role ENUM('DOCTOR', 'NURSE', 'PATIENT') NOT NULL DEFAULT 'DOCTOR',
+    role ENUM('ADMIN', 'DOCTOR', 'NURSE', 'PATIENT') NOT NULL DEFAULT 'DOCTOR',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
     visit_count INT DEFAULT 0
@@ -20,7 +20,10 @@ CREATE TABLE IF NOT EXISTS patients (
     ward VARCHAR(50),
     room VARCHAR(50),
     diagnosis TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status ENUM('Active', 'Recovered') NOT NULL DEFAULT 'Active',
+    user_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS assessments (
@@ -44,5 +47,20 @@ CREATE TABLE IF NOT EXISTS assessments (
     status VARCHAR(50),
     image_data LONGTEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id INT NOT NULL,
+    nurse_id INT NOT NULL,
+    patient_id VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    due_date DATETIME,
+    status ENUM('PENDING', 'COMPLETED') DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (nurse_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 );

@@ -1,4 +1,3 @@
-
 import { register, login } from './authController.js';
 import db from './db.js';
 

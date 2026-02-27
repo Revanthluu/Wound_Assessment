@@ -61,3 +61,18 @@ export interface Alert {
     first_name: string;
     last_name: string;
 }
+
+export interface Task {
+    id: number;
+    doctor_id: number;
+    nurse_id: number;
+    patient_id: string;
+    title: string;
+    description: string;
+    due_date: string;
+    status: 'PENDING' | 'COMPLETED';
+    created_at: string;
+    doctor_name?: string;
+    first_name?: string;
+    last_name?: string;
+}

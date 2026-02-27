@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { User, Alert } from '../types';
+import { User, Alert, UserRole } from '../types';
 import { db } from '../services/db';
 
 interface LayoutProps {
@@ -68,90 +68,51 @@ const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard Overview" 
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className="flex-1 px-4 py-8 space-y-2">
           <SidebarLink to="/dashboard" icon="fas fa-th-large" label="Dashboard" />
-          <SidebarLink to="/patients" icon="fas fa-user-friends" label="Patients" />
-          <SidebarLink to="/assessments" icon="fas fa-chart-line" label="Assessments" />
-          <SidebarLink to="/staff" icon="fas fa-user-md" label="Staff Directory" />
+
+          {currentUser?.role !== UserRole.PATIENT ? (
+            <>
+              <SidebarLink to="/patients" icon="fas fa-user-friends" label="Patients" />
+              <SidebarLink to="/assessments" icon="fas fa-wave-square" label="Assessments" />
+            </>
+          ) : (
+            <SidebarLink to="/my-profile" icon="fas fa-user-medical" label="My Health Profile" />
+          )}
+
           <SidebarLink to="/reports" icon="fas fa-file-alt" label="Reports" />
+
+          {currentUser?.role !== UserRole.PATIENT && (
+            <div className="pt-4">
+              <button
+                onClick={() => setShowAlerts(!showAlerts)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${showAlerts ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <i className="fas fa-bell w-5 text-center"></i>
+                  <span>Alerts</span>
+                </div>
+                {alerts.length > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                    {alerts.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {currentUser?.role === UserRole.ADMIN && (
+            <SidebarLink to="/staff" icon="fas fa-terminal" label="System Log" />
+          )}
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
-          <div className="relative">
-            <button
-              onClick={() => setShowAlerts(!showAlerts)}
-              className="w-full bg-slate-50 text-slate-400 p-3 rounded-lg flex items-center justify-between mb-4 border border-slate-100 hover:bg-slate-100 transition-all"
-            >
-              <div className="flex items-center gap-2">
-                <i className="fas fa-bell"></i>
-                <span className="text-sm font-bold">Alerts</span>
-              </div>
-              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${alerts.length > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-200 text-slate-500'}`}>
-                {alerts.length}
-              </span>
-            </button>
-
-            {showAlerts && (
-              <div className="absolute bottom-full left-0 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl mb-2 z-50 overflow-hidden animate-in slide-in-from-bottom-2">
-                <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-                  <h4 className="font-bold text-slate-800 text-sm">System Notifications</h4>
-                  {alerts.length > 0 && (
-                    <button
-                      onClick={handleMarkAllAsRead}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-700 uppercase tracking-tight"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {alerts.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <i className="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
-                      <p className="text-xs text-slate-500 font-medium">No active medical alerts</p>
-                    </div>
-                  ) : (
-                    alerts.map(alert => (
-                      <div key={alert.id} className="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors group">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-xs font-bold text-red-600 uppercase flex items-center gap-1 tracking-tight">
-                            <i className="fas fa-exclamation-circle"></i>
-                            Infection Risk
-                          </span>
-                          <span className="text-xs text-slate-400 uppercase font-semibold">
-                            {new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-700 font-bold mb-2 leading-relaxed">
-                          {alert.message}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <button
-                            onClick={() => navigate(`/assessments/${alert.assessment_id}`)}
-                            className="text-xs font-bold text-blue-600 hover:underline"
-                          >
-                            Review Case
-                          </button>
-                          <button
-                            onClick={() => handleMarkAsRead(alert.id)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-slate-400 hover:text-slate-600 font-semibold"
-                          >
-                            Dismiss
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="p-4 border-t border-slate-50 space-y-1">
           <SidebarLink to="/settings" icon="fas fa-cog" label="Settings" />
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-md transition-colors text-sm font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium"
           >
-            <i className="fas fa-sign-out-alt"></i>
+            <i className="fas fa-sign-out-alt w-5 text-center"></i>
             <span>Sign Out</span>
           </button>
         </div>

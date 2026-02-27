@@ -25,6 +25,7 @@ export const register = async (req, res) => {
             [email, hashedPassword, fullName, role]
         );
 
+
         res.status(201).json({ message: 'User registered successfully.' });
     } catch (error) {
         console.error('Registration error:', error);
@@ -63,6 +64,7 @@ export const login = async (req, res) => {
 
         // Update last login and visit count
         await db.query('UPDATE users SET last_login = NOW(), visit_count = visit_count + 1 WHERE id = ?', [user.id]);
+
 
         res.json({
             token,

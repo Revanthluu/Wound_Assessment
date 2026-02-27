@@ -1,4 +1,4 @@
-import { Patient, Assessment, UserRole, User } from '../types';
+import { Patient, Assessment, UserRole, User, Task } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -87,9 +87,26 @@ export const db = {
     }
   },
 
+  async getPatientsByNurse(nurseId: number): Promise<Patient[]> {
+    try {
+      const tasks = await this.getTasks('NURSE', nurseId);
+      const patientIds = new Set(tasks.map(t => t.patient_id));
+      const allPatients = await this.getPatients();
+      return allPatients.filter(p => patientIds.has(p.id));
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  },
+
   async getPatientById(id: string): Promise<Patient | null> {
     const patients = await this.getPatients();
     return patients.find(p => p.id === id) || null;
+  },
+
+  async getPatientByUserId(userId: number): Promise<Patient | null> {
+    const patients = await this.getPatients();
+    return patients.find(p => (p as any).user_id === userId) || null;
   },
 
   async createPatient(patient: Patient): Promise<boolean> {
@@ -238,6 +255,45 @@ export const db = {
     try {
       const response = await fetch(`${API_URL}/alerts/read-all`, {
         method: 'PUT'
+      });
+      return response.ok;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  },
+
+  async getTasks(role: string, id: number): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_URL}/tasks?role=${role}&id=${id}`);
+      if (!response.ok) throw new Error('Failed to fetch tasks');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  },
+
+  async createTask(task: any): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_URL}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      });
+      return response.ok;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  },
+
+  async updateTaskStatus(id: number, status: 'PENDING' | 'COMPLETED'): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_URL}/tasks/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
       });
       return response.ok;
     } catch (error) {

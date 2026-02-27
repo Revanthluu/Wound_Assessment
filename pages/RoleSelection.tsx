@@ -26,6 +26,13 @@ const RoleSelection: React.FC = () => {
 
       <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl mb-12">
         <RoleCard
+          icon="fas fa-user-shield"
+          title="Administrator"
+          description="Manage system users, monitor infrastructure, and oversee clinical compliance logs."
+          isSelected={selectedRole === UserRole.ADMIN}
+          onClick={() => setSelectedRole(UserRole.ADMIN)}
+        />
+        <RoleCard
           icon="fas fa-user-md"
           title="Doctor"
           description="Manage clinical workflows, assess wounds, and monitor patient healing trends."
@@ -49,7 +56,15 @@ const RoleSelection: React.FC = () => {
       </div>
 
       <button
-        onClick={() => navigate('/dashboard')}
+        onClick={() => {
+          const storedUser = sessionStorage.getItem('user');
+          if (storedUser) {
+            const user = JSON.parse(storedUser);
+            user.role = selectedRole;
+            sessionStorage.setItem('user', JSON.stringify(user));
+          }
+          navigate('/dashboard');
+        }}
         className="px-16 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-xl shadow-blue-200 transition-all active:scale-[0.98]"
       >
         Continue
@@ -62,8 +77,8 @@ const RoleCard = ({ icon, title, description, isSelected, onClick }: any) => (
   <button
     onClick={onClick}
     className={`flex-1 text-left p-10 rounded-[2rem] border-4 transition-all duration-300 relative group ${isSelected
-        ? 'bg-blue-50 border-blue-600 shadow-2xl shadow-blue-100 scale-[1.02]'
-        : 'bg-white border-transparent hover:border-slate-200'
+      ? 'bg-blue-50 border-blue-600 shadow-2xl shadow-blue-100 scale-[1.02]'
+      : 'bg-white border-transparent hover:border-slate-200'
       }`}
   >
     {isSelected && (

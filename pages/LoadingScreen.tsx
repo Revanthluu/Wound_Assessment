@@ -7,7 +7,14 @@ const LoadingScreen: React.FC = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/onboarding');
+      const storedUser = sessionStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+
+      if (user?.role === 'ADMIN') {
+        navigate('/dashboard');
+      } else {
+        navigate('/onboarding');
+      }
     }, 2000);
     return () => clearTimeout(timer);
   }, [navigate]);

@@ -2,7 +2,18 @@ import db from './db.js';
 
 export const getPatients = async (req, res) => {
     try {
-        const [patients] = await db.query('SELECT * FROM patients ORDER BY created_at DESC');
+        const { role, userId } = req.query;
+        let query = 'SELECT DISTINCT p.* FROM patients p';
+        let params = [];
+
+        if (role === 'NURSE' && userId) {
+            query += ' JOIN tasks t ON p.id = t.patient_id WHERE t.nurse_id = ?';
+            params.push(userId);
+        }
+
+        query += ' ORDER BY p.created_at DESC';
+        const [patients] = await db.query(query, params);
+
         // Convert field names to match frontend expectations (camelCase)
         const formattedPatients = patients.map(p => ({
             id: p.id,
@@ -64,7 +75,6 @@ export const updatePatientStatus = async (req, res) => {
 
         res.json({ message: 'Patient status updated successfully.', status });
     } catch (error) {
-        console.error('Error updating patient status:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

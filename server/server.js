@@ -21,6 +21,7 @@ app.put('/api/users/:id', updateProfile);
 import { getPatients, createPatient, updatePatientStatus } from './patientController.js';
 import { getAssessments, createAssessment, getAssessmentById } from './assessmentController.js';
 import { getAlerts, createAlert, markAsRead, markAllAsRead } from './alertController.js';
+import { getTasks, createTask, updateTaskStatus } from './taskController.js';
 
 // Patient Routes
 app.get('/api/patients', getPatients);
@@ -37,6 +38,11 @@ app.get('/api/alerts', getAlerts);
 app.post('/api/alerts', createAlert);
 app.put('/api/alerts/read-all', markAllAsRead);
 app.put('/api/alerts/:id/read', markAsRead);
+
+// Task Routes
+app.get('/api/tasks', getTasks);
+app.post('/api/tasks', createTask);
+app.put('/api/tasks/:id/status', updateTaskStatus);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

@@ -11,10 +11,34 @@ const PatientProfile: React.FC = () => {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [visits, setVisits] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
       if (!id) return;
+
+      const userJson = sessionStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : null;
+
+      if (user?.role === 'NURSE') {
+        const assignedPatients = await db.getPatientsByNurse(parseInt(user.id));
+        const isAssigned = assignedPatients.some(p => p.id === id);
+        if (!isAssigned) {
+          setAccessDenied(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (user?.role === 'PATIENT') {
+        const myPatient = await db.getPatientByUserId(parseInt(user.id));
+        if (!myPatient || myPatient.id !== id) {
+          setAccessDenied(true);
+          setLoading(false);
+          return;
+        }
+      }
+
       const [p, v] = await Promise.all([
         db.getPatientById(id),
         db.getAssessmentsByPatient(id)
@@ -26,7 +50,21 @@ const PatientProfile: React.FC = () => {
     fetch();
   }, [id]);
 
-  if (loading) return <Layout title="Patient File"><div className="p-20 text-center animate-pulse">Loading Clinical Data...</div></Layout>;
+  if (loading) return <Layout title="Patient File"><div className="p-20 text-center animate-pulse">Synchronizing Clinical Data...</div></Layout>;
+  if (accessDenied) return (
+    <Layout title="Access Restricted">
+      <div className="p-20 text-center">
+        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500 text-3xl shadow-sm border border-rose-100">
+          <i className="fas fa-user-lock"></i>
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 mb-2">Unauthorized Clinical Access</h2>
+        <p className="text-slate-500 font-medium max-w-md mx-auto">This patient record is currently restricted. You can only access patients explicitly assigned to your shift by a Lead Physician.</p>
+        <Link to="/dashboard" className="inline-block mt-8 px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+          Return to Hub
+        </Link>
+      </div>
+    </Layout>
+  );
   if (!patient) return <Layout title="Error"><div className="p-20 text-center text-red-500 font-bold">Patient Not Found</div></Layout>;
 
   // Ensure chart data is sorted oldest to newest
@@ -269,9 +307,95 @@ const PatientProfile: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Task Assignment Section for Doctors */}
+          {(() => {
+            const userJson = sessionStorage.getItem('user');
+            const currentUser = userJson ? JSON.parse(userJson) : null;
+
+            if (currentUser?.role === 'DOCTOR') {
+              return <TaskAssignment patientId={id!} doctorId={currentUser.id} />;
+            }
+            return null;
+          })()}
         </div>
-      </div >
+      </div>
     </Layout >
+  );
+};
+
+const TaskAssignment = ({ patientId, doctorId }: { patientId: string, doctorId: string }) => {
+  const [nurses, setNurses] = useState<any[]>([]);
+  const [selectedNurseId, setSelectedNurseId] = useState('');
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const u = await db.getUsers();
+      setNurses(u.filter((n: any) => n.role === 'NURSE'));
+    };
+    fetch();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedNurseId) return;
+    setLoading(true);
+    const success = await db.createTask({
+      doctor_id: parseInt(doctorId),
+      nurse_id: parseInt(selectedNurseId),
+      patient_id: patientId,
+      title,
+      description: desc,
+      due_date: new Date(Date.now() + 86400000).toISOString() // Default 24h
+    });
+    if (success) {
+      setTitle('');
+      setDesc('');
+      alert('Task assigned to nurse!');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm mt-8">
+      <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <i className="fas fa-tasks text-blue-600"></i>
+        Assign Nurse Task
+      </h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <select
+          required
+          value={selectedNurseId}
+          onChange={e => setSelectedNurseId(e.target.value)}
+          className="w-full p-3 bg-slate-50 rounded-xl font-bold text-xs outline-none border border-slate-100"
+        >
+          <option value="">Select Nurse...</option>
+          {nurses.map(n => <option key={n.id} value={n.id}>{n.fullName}</option>)}
+        </select>
+        <input
+          required
+          placeholder="Task Title"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          className="w-full p-3 bg-slate-50 rounded-xl font-bold text-xs outline-none border border-slate-100"
+        />
+        <textarea
+          placeholder="Instructions..."
+          value={desc}
+          onChange={e => setDesc(e.target.value)}
+          className="w-full p-3 bg-slate-50 rounded-xl font-bold text-xs outline-none border border-slate-100 min-h-[80px]"
+        />
+        <button
+          disabled={loading || !selectedNurseId}
+          className="w-full py-3 bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 disabled:opacity-50 transition-all"
+        >
+          {loading ? 'Assigning...' : 'Assign Task'}
+        </button>
+      </form>
+    </div>
   );
 };
 

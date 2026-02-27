@@ -13,10 +13,14 @@ const Settings: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState('Account Profile');
 
     // Mock settings
     const [notifications, setNotifications] = useState(true);
+    const [pushNotifications, setPushNotifications] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
+    const [twoFactor, setTwoFactor] = useState(false);
+    const [language, setLanguage] = useState('English (US)');
 
     useEffect(() => {
         const storedUser = sessionStorage.getItem('user');
@@ -65,125 +69,205 @@ const Settings: React.FC = () => {
         }
     };
 
+    const notifyChange = (msg: string) => {
+        setSuccess(msg);
+        setTimeout(() => setSuccess(null), 3000);
+    };
+
     return (
         <Layout title="System Settings">
             <div className="max-w-4xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Navigation Sidebar (Mobile Sticky) */}
+                    {/* Navigation Sidebar */}
                     <div className="md:col-span-1 space-y-2">
-                        <SettingsTab label="Account Profile" icon="fas fa-user-circle" active />
-                        <SettingsTab label="Security & Privacy" icon="fas fa-shield-alt" />
-                        <SettingsTab label="Notifications" icon="fas fa-bell" />
-                        <SettingsTab label="System Preferences" icon="fas fa-sliders-h" />
+                        <SettingsTab
+                            label="Account Profile"
+                            icon="fas fa-user-circle"
+                            active={activeTab === 'Account Profile'}
+                            onClick={() => setActiveTab('Account Profile')}
+                        />
+                        <SettingsTab
+                            label="Security & Privacy"
+                            icon="fas fa-shield-alt"
+                            active={activeTab === 'Security & Privacy'}
+                            onClick={() => setActiveTab('Security & Privacy')}
+                        />
+                        <SettingsTab
+                            label="Notifications"
+                            icon="fas fa-bell"
+                            active={activeTab === 'Notifications'}
+                            onClick={() => setActiveTab('Notifications')}
+                        />
+                        <SettingsTab
+                            label="System Preferences"
+                            icon="fas fa-sliders-h"
+                            active={activeTab === 'System Preferences'}
+                            onClick={() => setActiveTab('System Preferences')}
+                        />
                     </div>
 
                     {/* Content Area */}
-                    <div className="md:col-span-2 space-y-8">
-                        {/* Profile Section */}
-                        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                                <h3 className="font-bold text-slate-800">Clinical Profile</h3>
-                                <p className="text-xs text-slate-400 font-medium">Update your professional information and system identity.</p>
-                            </div>
-
-                            <form onSubmit={handleUpdateProfile} className="p-6 space-y-6">
-                                {error && (
-                                    <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-bold flex items-center gap-3 animate-head-shake">
-                                        <i className="fas fa-exclamation-circle text-lg"></i>
-                                        {error}
-                                    </div>
-                                )}
-                                {success && (
-                                    <div className="p-4 bg-green-50 border border-green-100 text-green-600 rounded-xl text-sm font-bold flex items-center gap-3 animate-bounce-short">
-                                        <i className="fas fa-check-circle text-lg"></i>
-                                        {success}
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
-                                        <input
-                                            type="text"
-                                            value={fullName}
-                                            onChange={(e) => setFullName(e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
-                                            placeholder="Dr. John Doe"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Professional Email</label>
-                                        <input
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
-                                            placeholder="clinician@hospital.com"
-                                        />
-                                    </div>
+                    <div className="md:col-span-2 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                        {activeTab === 'Account Profile' && (
+                            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                                    <h3 className="font-bold text-slate-800">Clinical Profile</h3>
+                                    <p className="text-xs text-slate-400 font-medium">Update your professional information and system identity.</p>
                                 </div>
 
-                                <div className="pt-6 border-t border-slate-100">
-                                    <h4 className="text-sm font-bold text-slate-800 mb-4">Change Secure Password</h4>
+                                <form onSubmit={handleUpdateProfile} className="p-6 space-y-6">
+                                    {(error || success) && (
+                                        <div className={`p-4 rounded-xl text-sm font-bold flex items-center gap-3 animate-in fade-in zoom-in duration-300 ${error ? 'bg-red-50 border border-red-100 text-red-600' : 'bg-green-50 border border-green-100 text-green-600'}`}>
+                                            <i className={`fas ${error ? 'fa-exclamation-circle' : 'fa-check-circle'} text-lg`}></i>
+                                            {error || success}
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
                                             <input
-                                                type="password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
+                                                type="text"
+                                                value={fullName}
+                                                onChange={(e) => setFullName(e.target.value)}
                                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
-                                                placeholder="••••••••"
+                                                placeholder="Dr. John Doe"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm Password</label>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Professional Email</label>
                                             <input
-                                                type="password"
-                                                value={confirmPassword}
-                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
-                                                placeholder="••••••••"
+                                                placeholder="clinician@hospital.com"
                                             />
                                         </div>
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-3 flex items-center gap-2 font-medium">
-                                        <i className="fas fa-info-circle text-blue-500"></i>
-                                        Leave blank if you do not wish to change your password.
-                                    </p>
-                                </div>
 
-                                <div className="flex justify-end pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
-                                    >
-                                        {loading ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-save"></i>}
-                                        Save Profile Changes
-                                    </button>
-                                </div>
-                            </form>
-                        </section>
+                                    <div className="flex justify-end pt-4">
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
+                                        >
+                                            {loading ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-save"></i>}
+                                            Save Profile Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </section>
+                        )}
 
-                        {/* Preferences Section */}
-                        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="font-bold text-slate-800">Email Notifications</h3>
-                                    <p className="text-xs text-slate-400 font-medium">Receive critical alerts about patient wound deterioration.</p>
+                        {activeTab === 'Security & Privacy' && (
+                            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                                    <h3 className="font-bold text-slate-800">Security Configuration</h3>
+                                    <p className="text-xs text-slate-400 font-medium">Manage your access credentials and authentication methods.</p>
                                 </div>
-                                <Toggle active={notifications} onToggle={() => setNotifications(!notifications)} />
-                            </div>
+                                <div className="p-6 space-y-8">
+                                    <div className="space-y-6">
+                                        <h4 className="text-sm font-bold text-slate-800">Update Secure Password</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">New Password</label>
+                                                <input
+                                                    type="password"
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                                                    placeholder="••••••••"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Confirm Password</label>
+                                                <input
+                                                    type="password"
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                                                    placeholder="••••••••"
+                                                />
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleUpdateProfile}
+                                            className="px-6 py-2 bg-slate-800 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all"
+                                        >
+                                            Update Password
+                                        </button>
+                                    </div>
 
-                            <div className="flex items-center justify-between pt-6 border-t border-slate-100">
-                                <div>
-                                    <h3 className="font-bold text-slate-800">System High-Contrast</h3>
-                                    <p className="text-xs text-slate-400 font-medium">Optimize UI for low-light clinical environments.</p>
+                                    <div className="pt-8 border-t border-slate-100 flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-800">Two-Factor Authentication</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Add an extra layer of security to your clinical account.</p>
+                                        </div>
+                                        <Toggle active={twoFactor} onToggle={() => { setTwoFactor(!twoFactor); notifyChange("2FA status updated"); }} />
+                                    </div>
                                 </div>
-                                <Toggle active={darkMode} onToggle={() => setDarkMode(!darkMode)} />
-                            </div>
-                        </section>
+                            </section>
+                        )}
+
+                        {activeTab === 'Notifications' && (
+                            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                                    <h3 className="font-bold text-slate-800">Communication Alerts</h3>
+                                    <p className="text-xs text-slate-400 font-medium">Configure how you receive critical system updates and patient alerts.</p>
+                                </div>
+                                <div className="p-6 space-y-8">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-800">Email Notifications</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Receive patient reports and system logs via email.</p>
+                                        </div>
+                                        <Toggle active={notifications} onToggle={() => { setNotifications(!notifications); notifyChange("Email notifications updated"); }} />
+                                    </div>
+                                    <div className="pt-8 border-t border-slate-100 flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-800">Push Notifications</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Real-time alerts in your browser for urgent assessments.</p>
+                                        </div>
+                                        <Toggle active={pushNotifications} onToggle={() => { setPushNotifications(!pushNotifications); notifyChange("Push settings updated"); }} />
+                                    </div>
+                                </div>
+                            </section>
+                        )}
+
+                        {activeTab === 'System Preferences' && (
+                            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                                    <h3 className="font-bold text-slate-800">Environment Preferences</h3>
+                                    <p className="text-xs text-slate-400 font-medium">Tailor the system interface to your specific clinical workflow.</p>
+                                </div>
+                                <div className="p-6 space-y-8">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-800">High-Contrast Mode</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Optimize UI for low-light or outdoor environments.</p>
+                                        </div>
+                                        <Toggle active={darkMode} onToggle={() => { setDarkMode(!darkMode); notifyChange("Interface theme updated"); }} />
+                                    </div>
+                                    <div className="pt-8 border-t border-slate-100 flex flex-col gap-4">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-800">Primary Language</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Select the default interface language.</p>
+                                        </div>
+                                        <select
+                                            value={language}
+                                            onChange={(e) => { setLanguage(e.target.value); notifyChange(`Language set to ${e.target.value}`); }}
+                                            className="w-full max-w-xs px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                                        >
+                                            <option>English (US)</option>
+                                            <option>Spanish (ES)</option>
+                                            <option>French (FR)</option>
+                                            <option>German (DE)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+                        )}
 
                         <div className="p-6 bg-orange-50 rounded-2xl border border-orange-100 flex items-start gap-4">
                             <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0">
@@ -203,8 +287,11 @@ const Settings: React.FC = () => {
     );
 };
 
-const SettingsTab = ({ label, icon, active = false }: { label: string; icon: string; active?: boolean }) => (
-    <button className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-xl shadow-blue-100 scale-[1.02]' : 'text-slate-500 hover:bg-white hover:text-slate-800'}`}>
+const SettingsTab = ({ label, icon, active = false, onClick }: { label: string; icon: string; active?: boolean; onClick: () => void }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-xl shadow-blue-100 scale-[1.02]' : 'text-slate-500 hover:bg-white hover:text-slate-800'}`}
+    >
         <i className={`${icon} w-5 text-center ${active ? 'text-white' : 'text-slate-400'}`}></i>
         <span>{label}</span>
         {active && <i className="fas fa-chevron-right ml-auto text-xs opacity-50"></i>}

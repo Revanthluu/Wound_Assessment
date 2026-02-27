@@ -1,4 +1,3 @@
-
 import pool from './db.js';
 import crypto from 'crypto';
 
