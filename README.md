@@ -11,30 +11,7 @@ Mediwound AI is a production-ready, AI-powered medical web application designed 
 - **Secure Authentication**: JWT-based session management with encrypted password storage.
 - **Responsive Analytics**: Visual progress tracking using interactive charts for better clinical decision-making.
 
-## 🛠️ Technology Stack
-
-### Frontend
-- **Framework**: React 19 with Vite 6
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS (Modern Glassmorphism Design)
-- **AI Integration**: Google Gemini Vision (via `@google/genai`)
-- **Data Visualization**: Recharts
-- **Icons**: Lucide React
-- **Routing**: React Router 7
-
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: MySQL (Relational schema for clinical data)
-- **Auth**: JSON Web Tokens (JWT) & Bcrypt (hashing)
-- **Environment**: Dotenv for secure configuration
-
-## 📦 Implementation Details
-
-The project follows a modern decoupled architecture:
-1.  **Frontend**: A highly interactive React SPA that handles complex state management for medical assessments and image processing. It communicates with the backend via a RESTful API.
-2.  **Backend**: A robust Express.js server that manages authentication, business logic for alerts, and high-performance MySQL queries.
-3.  **Database**: Organized into normalized tables (`users`, `patients`, `assessments`, `alerts`) ensuring data integrity and fast retrieval of clinical histories.
+S
 
 ## ⚙️ Setup & Installation
 
