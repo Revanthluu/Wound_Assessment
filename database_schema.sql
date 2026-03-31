@@ -20,10 +20,17 @@ CREATE TABLE IF NOT EXISTS patients (
     ward VARCHAR(50),
     room VARCHAR(50),
     diagnosis TEXT,
+    previous_wound TEXT,
+    healing_time VARCHAR(100),
+    diabetes VARCHAR(100),
+    ulcer VARCHAR(100),
+    bp VARCHAR(100),
     status ENUM('Active', 'Recovered') NOT NULL DEFAULT 'Active',
     user_id INT,
+    doctor_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS assessments (
@@ -59,6 +66,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     description TEXT,
     due_date DATETIME,
     status ENUM('PENDING', 'COMPLETED') DEFAULT 'PENDING',
+    nurse_note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (nurse_id) REFERENCES users(id) ON DELETE CASCADE,

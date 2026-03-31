@@ -11,6 +11,10 @@ const Settings: React.FC = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [age, setAge] = useState('');
+    const [experience, setExperience] = useState('');
+    const [gender, setGender] = useState('');
+    const [licenseNo, setLicenseNo] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('Account Profile');
@@ -29,6 +33,10 @@ const Settings: React.FC = () => {
             setCurrentUser(user);
             setFullName(user.fullName);
             setEmail(user.email);
+            setAge(user.age || '');
+            setExperience(user.experience || '');
+            setGender(user.gender || '');
+            setLicenseNo(user.license_no || '');
         }
     }, []);
 
@@ -48,6 +56,13 @@ const Settings: React.FC = () => {
         try {
             const payload: any = { fullName, email };
             if (password) payload.password = password;
+
+            if (currentUser.role === 'DOCTOR' || currentUser.role === 'NURSE') {
+                if (age) payload.age = parseInt(age);
+                if (experience) payload.experience = experience;
+                if (gender) payload.gender = gender;
+                if (licenseNo) payload.license_no = licenseNo;
+            }
 
             const updatedUser = await db.updateProfile(currentUser.id, payload);
             if (updatedUser) {
@@ -145,6 +160,54 @@ const Settings: React.FC = () => {
                                             />
                                         </div>
                                     </div>
+
+                                    {(currentUser?.role === 'DOCTOR' || currentUser?.role === 'NURSE') && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100 animate-in fade-in duration-300">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Age</label>
+                                                <input
+                                                    type="number"
+                                                    value={age}
+                                                    onChange={(e) => setAge(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
+                                                    placeholder="35"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Gender</label>
+                                                <select
+                                                    value={gender}
+                                                    onChange={(e) => setGender(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
+                                                >
+                                                    <option value="">Select...</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Experience</label>
+                                                <input
+                                                    type="text"
+                                                    value={experience}
+                                                    onChange={(e) => setExperience(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
+                                                    placeholder="5 Years / Consultant"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">License Number</label>
+                                                <input
+                                                    type="text"
+                                                    value={licenseNo}
+                                                    onChange={(e) => setLicenseNo(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
+                                                    placeholder="MD-123456"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-end pt-4">
                                         <button

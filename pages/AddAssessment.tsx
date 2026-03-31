@@ -38,7 +38,8 @@ export const AddAssessment = () => {
         epithelial: 0,
         slough: 0,
         eschar: 0,
-        doctorSuggestion: ''
+        doctorSuggestion: '',
+        wound_boundary_coordinates: ''
     });
 
     const [zoom, setZoom] = useState(1);
@@ -95,7 +96,8 @@ export const AddAssessment = () => {
       - estimated_l_cm: number (length in cm)
       - estimated_w_cm: number (width in cm)
       - description: string (brief clinical description of the wound bed and periwound)
-      - treatment_plan: string (concise clinical care suggestion for the doctor)`;
+      - treatment_plan: string (concise clinical care suggestion for the doctor)
+      - wound_boundary_coordinates: string (a list of coordinate tuples bounding the wound perimeter, EXACTLY in this format: '[(x1,y1), (x2,y2), ...]'. Example: '[(120,85), (340,90), (360,250)]')`;
 
             const response = await ai.models.generateContent({
                 model: 'gemini-flash-latest',
@@ -109,7 +111,11 @@ export const AddAssessment = () => {
                 config: { responseMimeType: "application/json" }
             });
 
-            const data = JSON.parse(response.text || '{}');
+            let rawText = response.text || '{}';
+            // Strip markdown block (e.g. ```json ... ```) safely
+            rawText = rawText.replace(/```[a-zA-Z]*\n?/g, '').replace(/```\n?/g, '').trim();
+            const data = JSON.parse(rawText);
+            
             setFormData(prev => ({
                 ...prev,
                 granulation: data.granulation_pct || 0,
@@ -121,11 +127,13 @@ export const AddAssessment = () => {
                 length: (data.estimated_l_cm || 0).toString(),
                 width: (data.estimated_w_cm || 0).toString(),
                 notes: data.description || prev.notes,
-                doctorSuggestion: data.treatment_plan || prev.doctorSuggestion
+                doctorSuggestion: data.treatment_plan || prev.doctorSuggestion,
+                wound_boundary_coordinates: data.wound_boundary_coordinates || ''
             }));
         } catch (e: any) {
             console.error("AI Analysis Failed:", e);
-            setAiError("AI surface analysis is temporarily unavailable due to high server demand. Please enter clinical parameters manually to proceed.");
+            // Replace generic error with the exact failure so user can debug (CORS, missing key, JSON parse, etc)
+            setAiError(`AI surface analysis failed: ${e.message || String(e)}. Please enter clinical parameters manually to proceed.`);
         } finally {
             setIsAnalyzing(false);
         }
@@ -166,7 +174,7 @@ export const AddAssessment = () => {
                 epithelial_pct: formData.epithelial,
                 slough_pct: formData.slough,
                 eschar_pct: formData.eschar,
-                marker_data: JSON.stringify({ marker, zoom, rotation }),
+                marker_data: JSON.stringify({ marker, zoom, rotation, wound_boundary_coordinates: formData.wound_boundary_coordinates }),
                 notes: formData.notes,
                 doctor_suggestion: formData.doctorSuggestion,
                 image_data: previewImage,
@@ -275,6 +283,29 @@ export const AddAssessment = () => {
                         </div>
                     </section>
 
+                    {formData.granulation > 0 && !isAnalyzing && (
+                        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 rounded-3xl text-white shadow-xl shadow-blue-100 flex items-center justify-between animate-in slide-in-from-top-4 duration-500 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full opacity-5 blur-3xl -mr-16 -mt-16"></div>
+                            <div>
+                                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1">
+                                    <i className="fas fa-check-circle text-emerald-300"></i>
+                                    AI Surface Analysis Verdict
+                                </p>
+                                <h4 className="text-xl font-extrabold tracking-tight">Clinical Diagnostic Result</h4>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="text-center bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-md border border-white/10">
+                                    <p className="text-2xl font-black text-white">{formData.woundStage}</p>
+                                    <p className="text-[8px] font-black uppercase tracking-wider text-white/60">Stage Result</p>
+                                </div>
+                                <div className="text-center bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-md border border-white/10">
+                                    <p className="text-2xl font-black text-white">{formData.eschar > 10 ? 'At Risk' : formData.slough > 20 ? 'Moderate' : 'Optimal'}</p>
+                                    <p className="text-[8px] font-black uppercase tracking-wider text-white/60">Condition Flag</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
                         {isAnalyzing && (
                             <div className="absolute inset-0 bg-blue-600/10 backdrop-blur-md z-20 flex flex-col items-center justify-center">
@@ -364,6 +395,15 @@ export const AddAssessment = () => {
                                 </div>
                             </div>
                         )}
+                        {formData.wound_boundary_coordinates && (
+                            <div className="mt-4 p-4 bg-slate-950 rounded-2xl border border-slate-800/50 text-slate-200 shadow-inner">
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                    <i className="fas fa-draw-polygon text-blue-400"></i>
+                                    Wound Boundary Coordinates (AI Detected)
+                                </p>
+                                <p className="font-mono text-xs text-blue-400 break-all">{formData.wound_boundary_coordinates}</p>
+                            </div>
+                        )}
                     </section>
 
                     <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
@@ -371,7 +411,7 @@ export const AddAssessment = () => {
                             <span>Tissue Analysis</span>
                             <span className="text-blue-600 font-bold uppercase tracking-widest text-[10px] bg-blue-50 px-2 py-1 rounded-full border border-blue-100 flex items-center gap-1">
                                 <i className="fas fa-microchip"></i>
-                                {isAnalyzing ? 'AI Analyzing...' : 'Manual Edit Enabled'}
+                                {isAnalyzing ? 'AI Analyzing...' : (previewImage ? 'AI Surface Analysis' : 'Clinical Entry')}
                             </span>
                         </h3>
                         <div className="grid grid-cols-2 gap-4">
@@ -382,8 +422,9 @@ export const AddAssessment = () => {
                                     min="0"
                                     max="100"
                                     value={formData.granulation}
+                                    readOnly={isAnalyzing || (!!previewImage && !aiError)}
                                     onChange={e => setFormData({ ...formData, granulation: parseInt(e.target.value) || 0 })}
-                                    className="w-full bg-transparent text-center text-2xl font-extrabold text-slate-800 border-none outline-none p-0"
+                                    className={`w-full bg-transparent text-center text-2xl font-extrabold border-none outline-none p-0 ${isAnalyzing || (!!previewImage && !aiError) ? 'text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
                                 />
                             </div>
                             <div className="text-center p-4 bg-pink-50 rounded-2xl border border-pink-100 focus-within:ring-2 focus-within:ring-pink-400 transition-all">
@@ -393,8 +434,9 @@ export const AddAssessment = () => {
                                     min="0"
                                     max="100"
                                     value={formData.epithelial}
+                                    readOnly={isAnalyzing || (!!previewImage && !aiError)}
                                     onChange={e => setFormData({ ...formData, epithelial: parseInt(e.target.value) || 0 })}
-                                    className="w-full bg-transparent text-center text-2xl font-extrabold text-slate-800 border-none outline-none p-0"
+                                    className={`w-full bg-transparent text-center text-2xl font-extrabold border-none outline-none p-0 ${isAnalyzing || (!!previewImage && !aiError) ? 'text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
                                 />
                             </div>
                             <div className="text-center p-4 bg-yellow-50 rounded-2xl border border-yellow-100 focus-within:ring-2 focus-within:ring-yellow-400 transition-all">
@@ -404,8 +446,9 @@ export const AddAssessment = () => {
                                     min="0"
                                     max="100"
                                     value={formData.slough}
+                                    readOnly={isAnalyzing || (!!previewImage && !aiError)}
                                     onChange={e => setFormData({ ...formData, slough: parseInt(e.target.value) || 0 })}
-                                    className="w-full bg-transparent text-center text-2xl font-extrabold text-slate-800 border-none outline-none p-0"
+                                    className={`w-full bg-transparent text-center text-2xl font-extrabold border-none outline-none p-0 ${isAnalyzing || (!!previewImage && !aiError) ? 'text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
                                 />
                             </div>
                             <div className="text-center p-4 bg-slate-900 rounded-2xl border border-slate-700 focus-within:ring-2 focus-within:ring-slate-500 transition-all">
@@ -415,8 +458,9 @@ export const AddAssessment = () => {
                                     min="0"
                                     max="100"
                                     value={formData.eschar}
+                                    readOnly={isAnalyzing || (!!previewImage && !aiError)}
                                     onChange={e => setFormData({ ...formData, eschar: parseInt(e.target.value) || 0 })}
-                                    className="w-full bg-transparent text-center text-2xl font-extrabold text-white border-none outline-none p-0"
+                                    className={`w-full bg-transparent text-center text-2xl font-extrabold border-none outline-none p-0 ${isAnalyzing || (!!previewImage && !aiError) ? 'text-slate-400 cursor-not-allowed' : 'text-white'}`}
                                 />
                             </div>
                         </div>

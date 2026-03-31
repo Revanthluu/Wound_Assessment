@@ -3,11 +3,13 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { db } from '../services/db';
 import { User } from '../types';
+import { useDeviceType } from '../hooks/useDeviceType';
 
 const StaffList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { isMobile } = useDeviceType();
 
   useEffect(() => {
     const fetch = async () => {
@@ -35,6 +37,50 @@ const StaffList: React.FC = () => {
           {loading ? (
             <div className="p-20 text-center text-slate-400 animate-pulse font-bold uppercase tracking-widest text-xs">
               Fetching User Registry...
+            </div>
+          ) : isMobile ? (
+            <div className="flex flex-col gap-4 p-4 md:p-6 bg-slate-50/30">
+              {users.map(user => (
+                <div key={user.id} className={`bg-white border p-5 rounded-2xl shadow-sm flex flex-col gap-4 ${user.id === currentUser?.id ? 'border-blue-200 bg-blue-50/10' : 'border-slate-100'}`}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 bg-cover bg-center border border-slate-200 shrink-0" style={{ backgroundImage: `url('https://picsum.photos/seed/${user.email}/100')` }}></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2">
+                        <p className="text-sm font-extrabold text-slate-800 flex items-center gap-2 truncate">
+                          {user.fullName}
+                          {user.id === currentUser?.id && (
+                            <span className="text-[8px] bg-blue-600 text-white px-2 py-0.5 rounded font-black uppercase tracking-tight shrink-0">You</span>
+                          )}
+                        </p>
+                        <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider shrink-0 ${user.role === 'DOCTOR' ? 'bg-indigo-50 text-indigo-600' :
+                          user.role === 'NURSE' ? 'bg-pink-50 text-pink-600' :
+                            'bg-slate-100 text-slate-600'
+                          }`}>
+                          {user.role}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium mt-1 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-between items-center">
+                    <div>
+                      <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">System ID</p>
+                      <p className="font-mono text-[10px] text-slate-600 font-bold mt-1">{user.id}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Visits</p>
+                      <p className="text-[10px] font-bold text-slate-700 mt-1">{user.visitCount}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-slate-100 pt-3">
+                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Last Access</p>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-slate-600">{new Date(user.lastLogin).toLocaleDateString()}</p>
+                      <p className="text-[8px] text-slate-400 font-black uppercase tracking-tight">{new Date(user.lastLogin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <table className="w-full text-left">

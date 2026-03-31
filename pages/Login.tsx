@@ -154,33 +154,32 @@ const Login: React.FC = () => {
             {!showOtpInput && (
               <>
                 {isRegistering && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Full Name</label>
-                      <input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                        placeholder="Dr. John Doe"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">System Role</label>
-                      <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value as UserRole)}
-                        className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                      >
-                        <option value={UserRole.ADMIN}>System Administrator</option>
-                        <option value={UserRole.DOCTOR}>Doctor / Clinician</option>
-                        <option value={UserRole.NURSE}>Nurse</option>
-                        <option value={UserRole.PATIENT}>Patient</option>
-                      </select>
-                    </div>
-                  </>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Full Name</label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                      placeholder="Dr. John Doe"
+                      required
+                    />
+                  </div>
                 )}
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">System Role</label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as UserRole)}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-sm"
+                  >
+                    <option value={UserRole.ADMIN}>System Administrator</option>
+                    <option value={UserRole.DOCTOR}>Doctor / Clinician</option>
+                    <option value={UserRole.NURSE}>Nurse</option>
+                    <option value={UserRole.PATIENT}>Patient</option>
+                  </select>
+                </div>
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Email Address</label>

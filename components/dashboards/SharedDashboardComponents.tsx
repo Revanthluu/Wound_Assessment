@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 
 export const DashboardHeader: React.FC<{
     title: string;
@@ -7,30 +8,30 @@ export const DashboardHeader: React.FC<{
     icon: string;
     currentUser: any;
     colorClass?: string;
-}> = ({ title, subtitle, icon, currentUser, colorClass = 'bg-blue-600' }) => (
-    <div className={`${colorClass} rounded-[2.5rem] p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden relative mb-8`}>
+}> = ({ title, subtitle, icon, currentUser, colorClass = 'bg-slate-900' }) => (
+    <div className={`${colorClass} rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 text-white shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-8 overflow-hidden relative mb-10 border border-white/5`}>
         <div className="relative z-10">
-            <p className="text-white/60 font-black uppercase tracking-[0.2em] text-[10px] mb-2">Hospital Command Center</p>
-            <h2 className="text-4xl font-black mb-2 tracking-tight flex items-center gap-4">
-                <i className={icon}></i>
+            <p className="text-white/40 font-black uppercase tracking-[0.2em] text-[10px] mb-3">Clinical Command Intelligence</p>
+            <h2 className="text-3xl md:text-5xl font-black mb-3 tracking-tight flex items-center gap-5">
+                <i className={`${icon} text-blue-500`}></i>
                 {title}
             </h2>
-            <p className="text-white/80 font-bold text-sm">{subtitle}</p>
+            <p className="text-white/60 font-bold text-base max-w-xl leading-relaxed">{subtitle}</p>
         </div>
-        <div className="flex gap-4 relative z-10 shrink-0">
-            <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-3xl border border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">Session Protocol</p>
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <h4 className="text-sm font-black uppercase tracking-widest">{currentUser?.role}</h4>
+        <div className="flex flex-wrap gap-4 relative z-10 shrink-0">
+            <div className="bg-white/5 backdrop-blur-xl px-7 py-5 rounded-[2rem] border border-white/10 shadow-inner">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Protocol Status</p>
+                <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                    <h4 className="text-sm font-black uppercase tracking-[0.1em]">{currentUser?.role}</h4>
                 </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-3xl border border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">Access Trace</p>
-                <h4 className="text-xs font-black">{currentUser?.email}</h4>
+            <div className="bg-white/5 backdrop-blur-xl px-7 py-5 rounded-[2rem] border border-white/10 shadow-inner">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Authenticated Entity</p>
+                <h4 className="text-xs font-black tracking-tight">{currentUser?.email}</h4>
             </div>
         </div>
-        <i className={`${icon} absolute -right-4 -bottom-4 text-9xl text-white/10 rotate-12`}></i>
+        <i className={`${icon} absolute -right-8 -bottom-8 text-[12rem] text-white/5 rotate-12 blur-sm pointer-events-none`}></i>
     </div>
 );
 
@@ -38,14 +39,14 @@ export const FidelityHeader: React.FC<{
     greeting: string;
     date: string;
     summary: string;
-    onGenerateReport?: () => void;
+    onAssignTaskToNurse?: () => void;
     onAssignTask?: () => void;
-}> = ({ greeting, date, summary, onGenerateReport, onAssignTask }) => (
+}> = ({ greeting, date, summary, onAssignTaskToNurse, onAssignTask }) => (
     <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
         <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-2">{date}</p>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
-                <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">{greeting}</h1>
+                <h1 className="text-2xl md:text-4xl font-black text-slate-800 tracking-tight mb-2">{greeting}</h1>
                 <div className="flex items-center gap-2 text-slate-500">
                     <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 text-[10px]">
                         <i className="fas fa-check"></i>
@@ -53,25 +54,106 @@ export const FidelityHeader: React.FC<{
                     <p className="text-sm font-bold">{summary}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button
-                    onClick={onGenerateReport}
+                    onClick={onAssignTaskToNurse}
                     className="flex items-center gap-2 px-6 py-3 border border-slate-200 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-all uppercase tracking-widest"
                 >
-                    <i className="far fa-file-alt"></i>
-                    Generate Report
+                    <i className="fas fa-tasks"></i>
+                    Assign Task To Nurse
                 </button>
                 <button
                     onClick={onAssignTask}
                     className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 uppercase tracking-widest"
                 >
                     <i className="fas fa-user-plus"></i>
-                    Assign Task to Nurse
+                    Add New Assignment
                 </button>
             </div>
         </div>
     </div>
 );
+
+export const TaskUpdateModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (status: 'PENDING' | 'COMPLETED', note: string) => void;
+    task: any;
+}> = ({ isOpen, onClose, onSubmit, task }) => {
+    const [status, setStatus] = React.useState<'PENDING' | 'COMPLETED'>(task?.status || 'PENDING');
+    const [note, setNote] = React.useState(task?.nurse_note || '');
+
+    React.useEffect(() => {
+        if (task) {
+            setStatus(task.status);
+            setNote(task.nurse_note || '');
+        }
+    }, [task]);
+
+    if (!isOpen || !task) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 lg:p-6 animate-in fade-in duration-500">
+            <div className="bg-white w-full max-w-lg rounded-[2.5rem] lg:rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100/50 flex flex-col max-h-[95vh] lg:max-h-[90vh]">
+                <div className="p-6 lg:p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/30 shrink-0">
+                    <div>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Update Care Protocol</h3>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Clinical Progress Report</p>
+                    </div>
+                    <button onClick={onClose} className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-all">
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+                <div className="p-8 lg:p-10 space-y-8 overflow-y-auto max-h-full scrollbar-hide">
+                    <div className="p-7 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Target Protocol</h4>
+                        <p className="text-base font-black text-slate-800 mb-1 tracking-tight">{task.title}</p>
+                        <p className="text-sm text-slate-500 font-medium leading-relaxed">{task.description}</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Execution Status</label>
+                        <div className="grid grid-cols-2 gap-5">
+                            <button
+                                type="button"
+                                onClick={() => setStatus('PENDING')}
+                                className={`py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all duration-300 ${status === 'PENDING' ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-lg shadow-amber-100/50' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                                <i className="fas fa-clock mr-2 opacity-50"></i> Pending Review
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStatus('COMPLETED')}
+                                className={`py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all duration-300 ${status === 'COMPLETED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-lg shadow-emerald-100/50' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                                <i className="fas fa-check-circle mr-2 opacity-50"></i> Finalized
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Clinical Observations</label>
+                        <textarea
+                            className="w-full p-6 bg-slate-50 border border-slate-200 rounded-[2rem] text-sm font-bold h-40 focus:ring-8 focus:ring-blue-500/5 transition-all outline-none resize-none placeholder:text-slate-300 leading-relaxed"
+                            placeholder="Document any significant changes in wound morphology or patient response..."
+                            value={note}
+                            onChange={e => setNote(e.target.value)}
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => onSubmit(status, note)}
+                        className="w-full py-7 bg-slate-900 text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] hover:bg-slate-800 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+                    >
+                        <i className="fas fa-cloud-upload-alt text-blue-400"></i>
+                        Sync Clinical Update
+                    </button>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+};
 
 export const FidelityStatCard: React.FC<{
     label: string;
@@ -80,7 +162,8 @@ export const FidelityStatCard: React.FC<{
     trend: string;
     subtitle: string;
     color: 'blue' | 'red' | 'emerald' | 'purple';
-}> = ({ label, value, icon, trend, subtitle, color }) => {
+    onClick?: () => void;
+}> = ({ label, value, icon, trend, subtitle, color, onClick }) => {
     const colors = {
         blue: { bg: 'bg-blue-50', text: 'text-blue-600', trend: 'text-emerald-500' },
         red: { bg: 'bg-red-50', text: 'text-red-600', trend: 'text-red-500' },
@@ -89,90 +172,129 @@ export const FidelityStatCard: React.FC<{
     };
 
     return (
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
-            <div className="absolute top-8 right-8 flex items-center gap-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100">
+        <div onClick={onClick} className={`bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden ${onClick ? 'cursor-pointer' : ''}`}>
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-slate-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute top-10 right-10 flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100 shadow-inner">
                 <i className={`fas fa-caret-up text-[10px] ${colors[color].trend}`}></i>
-                <span className={`text-[10px] font-black ${colors[color].trend}`}>{trend}</span>
+                <span className={`text-[10px] font-black ${colors[color].trend} tracking-tighter`}>{trend}</span>
             </div>
-            <div className={`w-12 h-12 ${colors[color].bg} ${colors[color].text} rounded-2xl flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform`}>
+            <div className={`w-12 h-12 md:w-14 md:h-14 ${colors[color].bg} ${colors[color].text} rounded-[1.25rem] flex items-center justify-center mb-6 md:mb-8 text-xl md:text-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm shadow-slate-200`}>
                 <i className={icon}></i>
             </div>
-            <h3 className="text-4xl font-black text-slate-800 mb-1">{value}</h3>
-            <p className="text-sm font-black text-slate-800 mb-1">{label}</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{subtitle}</p>
+            <h3 className="text-3xl md:text-5xl font-black text-slate-800 mb-2 tracking-tighter">{value}</h3>
+            <p className="text-sm font-black text-slate-800 mb-1 tracking-tight">{label}</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em] opacity-80">{subtitle}</p>
         </div>
     );
 };
 
 export const PriorityAttention: React.FC<{ count: number; patients: any[] }> = ({ count, patients }) => (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-        <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center">
-                    <i className="fas fa-exclamation-triangle"></i>
+    <div className="bg-white p-8 lg:p-10 rounded-[2.5rem] lg:rounded-[3rem] border border-slate-100 shadow-sm h-full overflow-y-auto scrollbar-hide">
+        <div className="flex items-center justify-between mb-10 px-2">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-[1.25rem] flex items-center justify-center text-lg shadow-inner">
+                    <i className="fas fa-shield-virus"></i>
                 </div>
-                <h3 className="text-lg font-black text-slate-800 tracking-tight">Priority Attention</h3>
+                <div>
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight">Active Criticals</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Physical Watchlist</p>
+                </div>
             </div>
-            <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-100">
-                {count} Active
+            <span className="px-4 py-1.5 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-[0.1em] border border-rose-100 shadow-sm">
+                {count} Cases
             </span>
         </div>
-        <div className="space-y-4">
             {patients.map((p, i) => (
-                <div key={i} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 relative group overflow-hidden">
-                    <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-black text-slate-800 text-base">{p.name}</h4>
-                        <span className="px-2 py-0.5 bg-red-500 text-white text-[8px] font-black rounded-full uppercase tracking-widest">High Risk</span>
+                <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-2xl relative group hover:bg-white hover:shadow-md transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-bold text-slate-800 text-sm tracking-tight">{p.name}</h4>
+                        <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest px-2 py-0.5 bg-rose-50 rounded-full border border-rose-100">Urgent</span>
                     </div>
-                    <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4 opacity-80">
                         {p.reason}
                     </p>
-                    <Link to={`/patients/${p.id}`} className="text-[10px] font-black text-red-600 uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all">
-                        Review Case <i className="fas fa-chevron-right"></i>
+                    <Link to={`/patients/${p.id}`} className="inline-flex py-2 px-4 bg-white border border-slate-200 text-[10px] font-black text-slate-600 rounded-xl uppercase tracking-widest items-center gap-2 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all">
+                        View File <i className="fas fa-arrow-right text-[8px]"></i>
                     </Link>
                 </div>
             ))}
-        </div>
     </div>
 );
 
-export const ScheduledTaskRow: React.FC<{ time: string; title: string; subtitle: string; onClick?: () => void }> = ({ time, title, subtitle, onClick }) => (
+export const ScheduledTaskRow: React.FC<{
+    time: string;
+    title: string;
+    subtitle: string;
+    status?: 'PENDING' | 'COMPLETED';
+    nurseNote?: string;
+    onClick?: () => void;
+}> = ({ time, title, subtitle, status, nurseNote, onClick }) => (
     <div
         onClick={onClick}
-        className={`flex items-center gap-6 p-6 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+        className={`flex items-center gap-8 p-8 border-b border-slate-50 last:border-0 hover:bg-slate-50/80 transition-all duration-300 group ${onClick ? 'cursor-pointer' : ''}`}
     >
-        <span className="text-sm font-black text-slate-400">{time}</span>
-        <div>
-            <h4 className="text-sm font-black text-slate-800 mb-0.5">{title}</h4>
-            <p className="text-xs font-bold text-slate-400">{subtitle}</p>
+        <div className="flex flex-col items-center shrink-0 w-20 px-2 py-3 bg-slate-50 rounded-2xl border border-slate-100 group-hover:bg-white group-hover:border-blue-100 transition-all">
+            <span className="text-xs font-black text-slate-800 tracking-tight">{time}</span>
+            {status && (
+                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase mt-2 shadow-sm ${status === 'COMPLETED' ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white'}`}>
+                    {status === 'COMPLETED' ? 'Done' : 'Active'}
+                </span>
+            )}
+        </div>
+        <div className="flex-1 min-w-0">
+            <h4 className={`text-base font-black mb-1 truncate tracking-tight transition-colors ${status === 'COMPLETED' ? 'text-slate-400' : 'text-slate-800'}`}>{title}</h4>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider line-clamp-1">{subtitle}</p>
+            {nurseNote && (
+                <div className="mt-4 p-4 bg-blue-50/30 border border-blue-100/50 rounded-2xl relative">
+                    <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-blue-50 border-l border-b border-blue-100/50 rotate-45"></div>
+                    <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-2">
+                        <i className="fas fa-user-nurse"></i> Nurse Report
+                    </p>
+                    <p className="text-xs text-slate-700 font-semibold leading-relaxed italic">"{nurseNote}"</p>
+                </div>
+            )}
+        </div>
+        <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 group-hover:shadow-md transition-all">
+            <i className="fas fa-chevron-right text-xs"></i>
         </div>
     </div>
 );
 
 export const WoundDistribution: React.FC<{ data: { type: string; percentage: number; color: string }[]; onViewAnalytics?: () => void }> = ({ data, onViewAnalytics }) => (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm mt-8">
-        <h3 className="text-lg font-black text-slate-800 tracking-tight mb-8">Wound Types Distribution</h3>
-        <div className="space-y-6">
-            {data.map((item, i) => (
-                <div key={i}>
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-black text-slate-600">{item.type}</span>
-                        <span className="text-xs font-black text-slate-800">{item.percentage}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full ${item.color} rounded-full transition-all duration-1000`}
-                            style={{ width: `${item.percentage}%` }}
-                        ></div>
-                    </div>
+    <div className="bg-white p-8 rounded-[2.5rem] lg:rounded-[3rem] border border-slate-100 shadow-sm h-full flex flex-col justify-between">
+        <div>
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h3 className="text-lg font-black text-slate-800 tracking-tight">Wound Morphology</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Demographic Distribution</p>
                 </div>
-            ))}
+                <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center">
+                    <i className="fas fa-chart-pie"></i>
+                </div>
+            </div>
+            <div className="space-y-6">
+                {data.map((item, i) => (
+                    <div key={i}>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">{item.type}</span>
+                            <span className="text-xs font-black text-slate-900">{item.percentage}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-50 rounded-full border border-slate-100 overflow-hidden">
+                            <div
+                                className={`h-full ${item.color} rounded-full transition-all duration-1000`}
+                                style={{ width: `${item.percentage}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
         <button
             onClick={onViewAnalytics}
-            className="w-full mt-10 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-blue-600 transition-colors"
+            className="w-full mt-10 py-3.5 bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-500 rounded-2xl uppercase tracking-[0.2em] hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
         >
-            View Full Analytics
+            View Detailed Analysis
+            <i className="fas fa-chevron-right text-[8px]"></i>
         </button>
     </div>
 );
@@ -333,8 +455,8 @@ export const FidelityTaskModal: React.FC<{
                                 onChange={e => setNewTask({ ...newTask, due_date: e.target.value })}
                             />
                         </div>
-                        <button type="submit" className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-slate-800 transition-all hover:scale-[1.02] active:scale-95 sticky bottom-0">
-                            Deploy Assignment
+                        <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-slate-800 transition-all active:scale-95">
+                            Add New Assignment
                         </button>
                     </form>
                 </div>

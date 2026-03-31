@@ -1,4 +1,5 @@
 import db from './db.js';
+import { getIO } from './socketManager.js';
 
 export const getTasks = async (req, res) => {
     try {
@@ -38,6 +39,7 @@ export const createTask = async (req, res) => {
             [doctor_id, nurse_id, patient_id, title, description, finalDueDate]
         );
         res.status(201).json({ message: 'Task created successfully.' });
+        getIO().emit('TASK_CREATED', { doctor_id, nurse_id, patient_id, title });
     } catch (error) {
         console.error('Create task error:', error);
         res.status(500).json({ message: 'Internal server error.' });
@@ -47,9 +49,10 @@ export const createTask = async (req, res) => {
 export const updateTaskStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
-        await db.query('UPDATE tasks SET status = ? WHERE id = ?', [status, id]);
+        const { status, nurse_note } = req.body;
+        await db.query('UPDATE tasks SET status = ?, nurse_note = ? WHERE id = ?', [status, nurse_note, id]);
         res.json({ message: 'Task status updated.' });
+        getIO().emit('TASK_UPDATED', { id, status });
     } catch (error) {
         console.error('Update task status error:', error);
         res.status(500).json({ message: 'Internal server error.' });

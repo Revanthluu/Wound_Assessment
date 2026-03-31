@@ -1,4 +1,5 @@
 import db from './db.js';
+import { getIO } from './socketManager.js';
 
 export const getAssessments = async (req, res) => {
     try {
@@ -52,6 +53,8 @@ export const createAssessment = async (req, res) => {
         );
 
         res.status(201).json({ message: 'Assessment saved and alert generated successfully' });
+        getIO().emit('NEW_ALERT', { patient_id: assessment.patient_id, message: alertMessage });
+        getIO().emit('ASSESSMENT_CREATED', { patient_id: assessment.patient_id, assessment_id: assessment.id });
     } catch (error) {
         console.error('Error saving assessment:', error);
         res.status(500).json({ message: 'Internal server error' });

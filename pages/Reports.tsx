@@ -5,11 +5,13 @@ import { db } from '../services/db';
 import { Patient, Assessment } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 const Reports: React.FC = () => {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [selectedPatientId, setSelectedPatientId] = useState<string>('');
     const [latestAssessment, setLatestAssessment] = useState<Assessment | null>(null);
+    const [allAssessments, setAllAssessments] = useState<Assessment[]>([]);
     const [loading, setLoading] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
@@ -49,6 +51,7 @@ const Reports: React.FC = () => {
                 try {
                     const assessments = await db.getAssessmentsByPatient(selectedPatientId);
                     setLatestAssessment(assessments[0] || null);
+                    setAllAssessments(assessments);
                 } catch (err) {
                     console.error("Failed to fetch assessments", err);
                 }
@@ -56,6 +59,7 @@ const Reports: React.FC = () => {
             fetchAssessment();
         } else {
             setLatestAssessment(null);
+            setAllAssessments([]);
         }
     }, [selectedPatientId]);
 
@@ -191,6 +195,38 @@ const Reports: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Medical History */}
+                        <div className="bg-slate-50/50 rounded-2xl p-8 border border-slate-100 mb-10">
+                            <div className="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
+                                <h3 className="text-xl font-black text-slate-800 flex items-center gap-3">
+                                    <i className="fas fa-history text-blue-600"></i>
+                                    Medical History
+                                </h3>
+                            </div>
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Previous Wound(s)</p>
+                                    <p className="text-sm font-bold text-slate-800">{selectedPatient?.previousWound || 'None'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Healing Time</p>
+                                    <p className="text-sm font-bold text-slate-800">{selectedPatient?.healingTime || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Diabetes</p>
+                                    <p className="text-sm font-bold text-slate-800">{selectedPatient?.diabetes || 'None'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ulcer</p>
+                                    <p className="text-sm font-bold text-slate-800">{selectedPatient?.ulcer || 'None'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">BP</p>
+                                    <p className="text-sm font-bold text-slate-800">{selectedPatient?.bp || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Assessment Summary */}
                         <div className="bg-slate-50/50 rounded-2xl p-8 border border-slate-100 mb-10">
                             <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
@@ -250,6 +286,77 @@ const Reports: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Before / After Comparison */}
+                        {allAssessments.length > 1 && (
+                            <div className="mb-10 bg-slate-50/50 p-8 rounded-2xl border border-slate-100">
+                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                    <i className="fas fa-images text-blue-600"></i>
+                                    Wound Healing Comparison (Initial vs Current)
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Initial Scan ({new Date(allAssessments[allAssessments.length - 1].date).toLocaleDateString()})</p>
+                                        <div className="aspect-video bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex items-center justify-center relative">
+                                            {allAssessments[allAssessments.length - 1].image_data ? (
+                                                <img src={allAssessments[allAssessments.length - 1].image_data} alt="Initial" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="text-slate-300 text-xs italic">No image logged</div>
+                                            )}
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="text-[10px] font-black text-slate-500">Granulation: <span className="text-green-600">{allAssessments[allAssessments.length - 1].granulation_pct}%</span></span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Current Scan ({new Date(latestAssessment.date).toLocaleDateString()})</p>
+                                        <div className="aspect-video bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex items-center justify-center relative">
+                                            {latestAssessment.image_data ? (
+                                                <img src={latestAssessment.image_data} alt="Current" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="text-slate-300 text-xs italic">No image logged</div>
+                                            )}
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="text-[10px] font-black text-slate-500">Granulation: <span className="text-green-600">{latestAssessment.granulation_pct}%</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Healing Progression Line Chart Analytics */}
+                        {allAssessments.length > 1 && (
+                            <div className="mb-10 bg-slate-50/50 p-8 rounded-2xl border border-slate-100">
+                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                    <i className="fas fa-chart-line text-blue-600"></i>
+                                    Healing Progression Analytics
+                                </h4>
+                                <div className="h-64 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={[...allAssessments].reverse()} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorGranulation" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.1} />
+                                                    <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+                                                </linearGradient>
+                                                <linearGradient id="colorPain" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
+                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="4" stroke="#e2e8f0" vertical={false} />
+                                            <XAxis dataKey="date" tickFormatter={(str) => new Date(str).toLocaleDateString([], { month: 'short', day: 'numeric' })} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }} />
+                                            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }} />
+                                            <Tooltip contentStyle={{ borderRadius: '0.75rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                                            <Legend wrapperStyle={{ fontSize: 10, fontWeight: 'bold', paddingTop: 10 }} />
+                                            <Area type="monotone" dataKey="granulation_pct" name="Granulation %" stroke="#16a34a" fill="url(#colorGranulation)" strokeWidth={3} />
+                                            <Area type="monotone" dataKey="pain_level" name="Pain Index (x10)" stroke="#2563eb" fill="url(#colorPain)" strokeWidth={3} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Notes & Suggestions */}
                         <div className="space-y-8 mb-10">

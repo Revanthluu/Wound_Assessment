@@ -6,6 +6,8 @@ import { DoctorDashboard } from '../components/dashboards/DoctorDashboard';
 import { NurseDashboard } from '../components/dashboards/NurseDashboard';
 import { PatientDashboard } from '../components/dashboards/PatientDashboard';
 
+import { db } from '../services/db';
+
 export const Dashboard = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,17 @@ export const Dashboard = () => {
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
     if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
+      const userObj = JSON.parse(storedUser);
+      setCurrentUser(userObj);
+      
+      // Sync with latest data from DB to get updated fields like age/experience
+      db.getUsers().then(users => {
+          const latest = users.find(u => u.id === userObj.id);
+          if (latest) {
+              setCurrentUser(latest);
+              sessionStorage.setItem('user', JSON.stringify(latest));
+          }
+      });
     }
     setLoading(false);
   }, []);

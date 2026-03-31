@@ -72,7 +72,11 @@ export const login = async (req, res) => {
                 id: user.id,
                 email: user.email,
                 fullName: user.full_name,
-                role: user.role
+                role: user.role,
+                age: user.age,
+                experience: user.experience,
+                gender: user.gender,
+                license_no: user.license_no
             }
         });
     } catch (error) {
@@ -83,7 +87,7 @@ export const login = async (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        const [users] = await db.query('SELECT id, email, full_name as fullName, role, last_login as lastLogin, visit_count as visitCount FROM users');
+        const [users] = await db.query('SELECT id, email, full_name as fullName, role, last_login as lastLogin, visit_count as visitCount, age, experience, gender, license_no FROM users');
         res.json(users);
     } catch (error) {
         console.error('Fetch users error:', error);
@@ -94,7 +98,7 @@ export const getUsers = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, email, password } = req.body;
+        const { fullName, email, password, age, experience, gender, license_no } = req.body;
 
         if (!fullName || !email) {
             return res.status(400).json({ message: 'Full name and email are required.' });
@@ -102,6 +106,26 @@ export const updateProfile = async (req, res) => {
 
         let query = 'UPDATE users SET full_name = ?, email = ?';
         let params = [fullName, email];
+
+        if (age !== undefined) {
+            query += ', age = ?';
+            params.push(age);
+        }
+
+        if (experience !== undefined) {
+            query += ', experience = ?';
+            params.push(experience);
+        }
+
+        if (gender !== undefined) {
+            query += ', gender = ?';
+            params.push(gender);
+        }
+
+        if (license_no !== undefined) {
+            query += ', license_no = ?';
+            params.push(license_no);
+        }
 
         if (password) {
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -116,13 +140,60 @@ export const updateProfile = async (req, res) => {
 
         res.json({
             message: 'Profile updated successfully.',
-            user: { id, fullName, email }
+            user: { id, fullName, email, age, experience, gender, license_no }
         });
     } catch (error) {
         console.error('Update profile error:', error);
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ message: 'Email already in use.' });
         }
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+};
+
+export const generatePatientCredentials = async (req, res) => {
+    try {
+        const { id } = req.params; // Patient ID
+        const { email, password, fullName } = req.body;
+
+        if (!email || !password || !fullName) {
+            return res.status(400).json({ message: 'Email, password, and full name are required.' });
+        }
+
+        // Check if patient exists
+        const [patients] = await db.query('SELECT * FROM patients WHERE id = ?', [id]);
+        if (patients.length === 0) {
+            return res.status(404).json({ message: 'Patient not found.' });
+        }
+
+        const patient = patients[0];
+        if (patient.user_id) {
+            return res.status(409).json({ message: 'Patient already has credentials.' });
+        }
+
+        // Check if email is already registered
+        const [existingUsers] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (existingUsers.length > 0) {
+            return res.status(409).json({ message: 'Email already registered.' });
+        }
+
+        // Hash temporary password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert new user specifically for Patient
+        const [userResult] = await db.query(
+            'INSERT INTO users (email, password_hash, full_name, role) VALUES (?, ?, ?, ?)',
+            [email, hashedPassword, fullName, 'PATIENT']
+        );
+
+        const newUserId = userResult.insertId;
+
+        // Update patient to link to new user
+        await db.query('UPDATE patients SET user_id = ? WHERE id = ?', [newUserId, id]);
+
+        res.status(201).json({ message: 'Patient credentials generated successfully.', userId: newUserId });
+    } catch (error) {
+        console.error('Generate patient credentials error:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 };

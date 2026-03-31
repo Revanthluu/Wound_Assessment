@@ -1,4 +1,5 @@
 import db from './db.js';
+import { getIO } from './socketManager.js';
 
 export const getAlerts = async (req, res) => {
     try {
@@ -40,6 +41,7 @@ export const markAsRead = async (req, res) => {
         const { id } = req.params;
         await db.query('UPDATE alerts SET is_read = TRUE WHERE id = ?', [id]);
         res.json({ message: 'Alert marked as read.' });
+        getIO().emit('ALERT_READ', { id });
     } catch (error) {
         console.error('Mark alert as read error:', error);
         res.status(500).json({ message: 'Internal server error.' });
@@ -50,6 +52,7 @@ export const markAllAsRead = async (req, res) => {
     try {
         await db.query('UPDATE alerts SET is_read = TRUE');
         res.json({ message: 'All alerts marked as read.' });
+        getIO().emit('ALL_ALERTS_READ');
     } catch (error) {
         console.error('Mark all alerts as read error:', error);
         res.status(500).json({ message: 'Internal server error.' });

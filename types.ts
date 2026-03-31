@@ -16,8 +16,14 @@ export interface Patient {
     admissionDate: string;
     ward: string;
     room: string;
-    diagnosis: string;
     status: 'Active' | 'Recovered';
+    user_id?: number;
+    doctor_id?: number;
+    previousWound?: string;
+    healingTime?: string;
+    diabetes?: string;
+    ulcer?: string;
+    bp?: string;
 }
 
 export interface Assessment {
@@ -49,6 +55,10 @@ export interface User {
     fullName: string;
     visitCount: number;
     lastLogin: string;
+    age?: number;
+    experience?: string;
+    gender?: string;
+    license_no?: string;
 }
 
 export interface Alert {
@@ -71,6 +81,7 @@ export interface Task {
     description: string;
     due_date: string;
     status: 'PENDING' | 'COMPLETED';
+    nurse_note?: string;
     created_at: string;
     doctor_name?: string;
     first_name?: string;

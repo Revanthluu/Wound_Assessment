@@ -76,9 +76,13 @@ export const db = {
     }
   },
 
-  async getPatients(): Promise<Patient[]> {
+  async getPatients(role?: string, userId?: number): Promise<Patient[]> {
     try {
-      const response = await fetch(`${API_URL}/patients`);
+      let url = `${API_URL}/patients`;
+      if (role && userId) {
+        url += `?role=${role}&userId=${userId}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch patients');
       return await response.json();
     } catch (error) {
@@ -100,13 +104,26 @@ export const db = {
   },
 
   async getPatientById(id: string): Promise<Patient | null> {
-    const patients = await this.getPatients();
+    const patients = await this.getPatients(); // Admin view implicitly gets all, others might need direct fetch or be restricted
     return patients.find(p => p.id === id) || null;
   },
 
   async getPatientByUserId(userId: number): Promise<Patient | null> {
     const patients = await this.getPatients();
     return patients.find(p => (p as any).user_id === userId) || null;
+  },
+
+  async generatePatientCredentials(patientId: string, payload: any): Promise<any> {
+    const response = await fetch(`${API_URL}/patients/${patientId}/credentials`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to generate credentials');
+    }
+    return await response.json();
   },
 
   async createPatient(patient: Patient): Promise<boolean> {
@@ -137,6 +154,24 @@ export const db = {
       if (!response.ok) {
         const data = await response.json();
         throw new APIError(data.message || 'Failed to update patient status');
+      }
+      return true;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  async updatePatient(id: string, patient: Partial<Patient>): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_URL}/patients/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patient)
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new APIError(data.message || 'Failed to update patient details');
       }
       return true;
     } catch (error) {
@@ -288,12 +323,12 @@ export const db = {
     }
   },
 
-  async updateTaskStatus(id: number, status: 'PENDING' | 'COMPLETED'): Promise<boolean> {
+  async updateTaskStatus(id: number, status: 'PENDING' | 'COMPLETED', nurseNote?: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_URL}/tasks/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, nurse_note: nurseNote })
       });
       return response.ok;
     } catch (error) {
